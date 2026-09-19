@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { FadeIn, Stagger, staggerItem } from './motion';
+import { FadeIn, Stagger } from './motion';
+import { staggerItem } from './motionVariants';
 
 const testimonials = [
   {

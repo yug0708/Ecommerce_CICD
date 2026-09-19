@@ -27,7 +27,7 @@ function serializeProduct<T extends { price: Product['price']; compareAtPrice: P
 }
 
 async function ensureUniqueProductSlug(base: string, excludeId?: string): Promise<string> {
-  let slug = slugify(base);
+  const slug = slugify(base);
   if (!slug) {
     throw new ValidationError('Unable to generate a valid slug from name');
   }

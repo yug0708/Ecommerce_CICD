@@ -9,7 +9,7 @@ import type {
 } from '../validators/category.validators.js';
 
 async function ensureUniqueCategorySlug(base: string, excludeId?: string): Promise<string> {
-  let slug = slugify(base);
+  const slug = slugify(base);
   if (!slug) {
     throw new ValidationError('Unable to generate a valid slug from name');
   }

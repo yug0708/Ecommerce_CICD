@@ -391,7 +391,6 @@ function DemoReviewAndPay({
 }
 
 export default function CheckoutPage() {
-  const navigate = useNavigate();
   const cart = useCartStore((s) => s.cart);
   const fetchCart = useCartStore((s) => s.fetchCart);
   const promoCode = useCheckoutStore((s) => s.promoCode);

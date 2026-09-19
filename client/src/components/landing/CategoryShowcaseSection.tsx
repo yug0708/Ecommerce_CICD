@@ -8,7 +8,8 @@ import {
   resolveImageUrl,
   type CatalogCategory,
 } from '@/lib/catalog';
-import { FadeIn, Stagger, staggerItem } from './motion';
+import { FadeIn, Stagger } from './motion';
+import { staggerItem } from './motionVariants';
 
 const PLACEHOLDER =
   'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=900&q=80';
