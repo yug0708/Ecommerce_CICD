@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --color-surface: 255 255 255;
+  --color-surface-raised: 255 255 255;
+  --color-surface-overlay: 255 255 255;
+  --color-surface-muted: 248 250 252;
+  --color-border: 226 232 240;
+  --color-border-strong: 203 213 225;
+  --color-content: 15 23 42;
+  --color-content-muted: 71 85 105;
+  --color-content-subtle: 148 163 184;
+  --color-content-inverse: 255 255 255;
+}
+
+.dark {
+  color-scheme: dark;
+  --color-surface: 2 6 23;
+  --color-surface-raised: 15 23 42;
+  --color-surface-overlay: 30 41 59;
+  --color-surface-muted: 15 23 42;
+  --color-border: 51 65 85;
+  --color-border-strong: 71 85 105;
+  --color-content: 248 250 252;
+  --color-content-muted: 148 163 184;
+  --color-content-subtle: 100 116 139;
+  --color-content-inverse: 15 23 42;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth antialiased;
+  }
+
+  body {
+    @apply min-w-[320px] bg-surface-muted font-sans text-content transition-colors duration-200;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+
+  ::selection {
+    @apply bg-primary-200 text-primary-950;
+  }
+
+  .dark ::selection {
+    @apply bg-primary-800 text-primary-50;
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    @apply outline-none transition duration-150 ease-smooth focus-visible:ring-2 focus-visible:ring-primary-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface;
+  }
+}
