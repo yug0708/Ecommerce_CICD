@@ -36,6 +36,9 @@ Desktop.ini
 *.swp
 *.swo
 
+# Netlify CLI
+.netlify/
+
 # Misc
 *.local
 .cache/

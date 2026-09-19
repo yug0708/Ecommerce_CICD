@@ -38,32 +38,58 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npm test
+      - run: npm run test
       - run: npm run db:generate
       - run: npm run build
 
-  deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  docker:
     needs: test-and-build
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy API (Render / Railway / Fly)
+      - name: Build API image
+        run: docker build -f server/Dockerfile -t ecommerce-api:${{ github.sha }} .
+      - name: Build storefront image
         env:
-          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
+          VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
         run: |
-          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
-            echo "Set RENDER_DEPLOY_HOOK (or swap this step for Railway/Fly) to enable auto-deploy."
+          docker build -f client/Dockerfile -t ecommerce-web:${{ github.sha }} \
+            --build-arg VITE_API_URL="${VITE_API_URL:-/api}" \
+            --build-arg VITE_STRIPE_PUBLISHABLE_KEY="${VITE_STRIPE_PUBLISHABLE_KEY:-pk_test_replace_me}" \
+            --build-arg VITE_SITE_URL="${VITE_SITE_URL:-http://localhost}" \
+            .
+
+  deploy-netlify:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test-and-build, docker]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Build storefront
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
+          VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
+        run: |
+          export VITE_API_URL="${VITE_API_URL:-/api}"
+          export VITE_STRIPE_PUBLISHABLE_KEY="${VITE_STRIPE_PUBLISHABLE_KEY:-pk_test_replace_me}"
+          export VITE_SITE_URL="${VITE_SITE_URL:-https://localhost}"
+          npm run build -w client
+      - name: Deploy to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ -z "$NETLIFY_SITE_ID" ]; then
+            echo "::warning::Add GitHub secrets NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID to publish the storefront."
+            echo "Create a site at https://app.netlify.com/teams/yugshah82/projects then add those secrets."
             exit 0
           fi
-          curl -fsS -X POST "$RENDER_DEPLOY_HOOK"
-      - name: Deploy web (Vercel)
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          if [ -z "$VERCEL_TOKEN" ]; then
-            echo "Set VERCEL_TOKEN to enable frontend deploy, or connect the Vercel GitHub app."
-            exit 0
-          fi
-          npx vercel@latest deploy --prod --token "$VERCEL_TOKEN" --cwd client
+          npx netlify-cli deploy --prod --dir=client/dist --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN" --message "github ${GITHUB_SHA}"

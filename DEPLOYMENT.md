@@ -81,16 +81,32 @@ CORS: API `CLIENT_URL` must exactly match the frontend origin.
 
 ---
 
-## GitHub Actions
+## GitHub Actions + Docker + Netlify
 
-`.github/workflows/ci.yml`:
+Pipeline in `.github/workflows/ci.yml`:
 
-1. Lint → unit tests → Prisma generate → production build on every PR/push.
-2. On push to `main`, optional deploy:
-   - `RENDER_DEPLOY_HOOK` secret → POST to Render deploy hook
-   - `VERCEL_TOKEN` secret → `vercel deploy --prod`
+1. **test-and-build** — lint, tests, Prisma generate, production build.
+2. **docker** — builds `server/Dockerfile` and `client/Dockerfile` (does not publish images).
+3. **deploy-netlify** — on push to `main`, after the jobs above pass, builds the Vite app and deploys `client/dist` to Netlify.
 
-You can also skip the deploy job and use the native Render/Vercel GitHub integrations.
+Netlify hosts the **storefront only**. Express + PostgreSQL run in Docker (local `docker compose` or a VM/PaaS). Point the SPA at the API with `VITE_API_URL`.
+
+### One-time Netlify setup
+
+1. Open [Netlify projects](https://app.netlify.com/teams/yugshah82/projects) and sign in.
+2. **Add new project → Import an existing project → GitHub → `yug0708/Ecommerce_CICD`**.
+   - Build command: `npm ci && npm run build -w client` (already in `netlify.toml`).
+   - Publish directory: `client/dist`.
+3. After the site exists, copy **Site ID** (Site configuration → General).
+4. Create a token: [Netlify user settings → Applications → New access token](https://app.netlify.com/user/applications#personal-access-tokens).
+5. In GitHub: repo **Settings → Secrets and variables → Actions**:
+   - Secret `NETLIFY_AUTH_TOKEN` = access token
+   - Secret `NETLIFY_SITE_ID` = site ID
+   - Optional secret `VITE_STRIPE_PUBLISHABLE_KEY`
+   - Optional variables `VITE_API_URL` (e.g. `https://your-api.example.com/api`) and `VITE_SITE_URL` (your `*.netlify.app` origin)
+6. If you deploy from GitHub Actions, turn **off** Netlify auto-builds (Site configuration → Build & deploy → Stop auto publishing) so only CI publishes after tests pass.
+
+Push to `main` to run the pipeline. The Actions log prints the Netlify URL when secrets are set.
 
 ---
 
