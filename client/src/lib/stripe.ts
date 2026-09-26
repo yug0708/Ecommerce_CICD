@@ -15,3 +15,7 @@ export const stripePromise = isLiveStripeKey(publishableKey) ? loadStripe(publis
 export function hasStripeConfig(): boolean {
   return isLiveStripeKey(publishableKey);
 }
+
+export function isTestStripeKey(): boolean {
+  return publishableKey.startsWith('pk_test_') && isLiveStripeKey(publishableKey);
+}

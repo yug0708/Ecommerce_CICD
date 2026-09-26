@@ -290,6 +290,7 @@ export async function createOrderFromCart(userId: string, input: CreateOrderInpu
               shippingCost,
               discountAmount,
               total,
+              currency: env.STRIPE_CURRENCY.toUpperCase(),
               notes: input.notes,
               shippingAddressId: shippingAddress.id,
               billingAddressId: billingAddress.id,

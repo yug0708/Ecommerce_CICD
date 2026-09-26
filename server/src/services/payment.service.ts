@@ -170,9 +170,10 @@ export async function createPaymentIntent(
     try {
       const existing = await stripe.paymentIntents.retrieve(order.payment.providerRef);
       if (
-        existing.status === 'requires_payment_method' ||
-        existing.status === 'requires_confirmation' ||
-        existing.status === 'requires_action'
+        existing.currency === currency &&
+        (existing.status === 'requires_payment_method' ||
+          existing.status === 'requires_confirmation' ||
+          existing.status === 'requires_action')
       ) {
         if (!existing.client_secret) {
           throw new ValidationError('Stripe PaymentIntent is missing client_secret');

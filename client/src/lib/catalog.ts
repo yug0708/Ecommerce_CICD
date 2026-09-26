@@ -266,7 +266,9 @@ export function resolveImageUrl(path: string | null | undefined, fallback: strin
 export function formatPrice(value: string): string {
   const amount = Number(value);
   if (Number.isNaN(amount)) return value;
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  const currency = import.meta.env.VITE_CURRENCY || 'INR';
+  const locale = currency === 'INR' ? 'en-IN' : 'en-US';
+  return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
 }
 
 export function getFallbackProductDetail(slug: string): ProductDetail | null {

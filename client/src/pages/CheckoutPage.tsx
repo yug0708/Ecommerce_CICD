@@ -27,7 +27,7 @@ import {
   type ShippingAddressFormValues,
 } from '@/lib/checkoutSchemas';
 import { getErrorMessage } from '@/lib/api';
-import { hasStripeConfig, stripePromise } from '@/lib/stripe';
+import { hasStripeConfig, isTestStripeKey, stripePromise } from '@/lib/stripe';
 import { cn } from '@/lib/cn';
 import { useCartStore } from '@/store/useCartStore';
 import { useCheckoutStore } from '@/store/useCheckoutStore';
@@ -190,6 +190,13 @@ function PaymentStepForm({
       <div className="rounded-2xl border border-border bg-surface-muted/40 p-4">
         <PaymentElement options={{ layout: 'tabs' }} />
       </div>
+      {isTestStripeKey() ? (
+        <p className="text-sm text-content-muted">
+          This Stripe account is in India, so the US test card 4242 is declined. Use{' '}
+          <span className="font-medium text-content">4000 0035 6000 0008</span>, any future expiry,
+          and any CVC.
+        </p>
+      ) : null}
       {active ? (
         <Button onClick={() => void continueToReview()} isLoading={saving}>
           Continue to review
