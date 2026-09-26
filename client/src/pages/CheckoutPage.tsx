@@ -148,8 +148,10 @@ function OrderSidebar({
 
 function PaymentStepForm({
   onReadyForReview,
+  active,
 }: {
   onReadyForReview: () => void;
+  active: boolean;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -176,17 +178,23 @@ function PaymentStepForm({
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-content">Payment</h2>
+        <h2 className="text-lg font-semibold text-content">
+          {active ? 'Payment' : 'Payment method'}
+        </h2>
         <p className="mt-1 text-sm text-content-muted">
-          Enter your card details. You won’t be charged until you confirm on the next step.
+          {active
+            ? 'Enter your card details. You won’t be charged until you confirm on the next step.'
+            : 'These card details stay attached to this order until you pay.'}
         </p>
       </div>
       <div className="rounded-2xl border border-border bg-surface-muted/40 p-4">
         <PaymentElement options={{ layout: 'tabs' }} />
       </div>
-      <Button onClick={() => void continueToReview()} isLoading={saving}>
-        Continue to review
-      </Button>
+      {active ? (
+        <Button onClick={() => void continueToReview()} isLoading={saving}>
+          Continue to review
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -215,6 +223,12 @@ function ReviewAndPay({
 
     setPaying(true);
     try {
+      const submitted = await elements.submit();
+      if (submitted.error) {
+        toast.error('Card details incomplete', submitted.error.message ?? 'Check the payment form');
+        return;
+      }
+
       const returnUrl = `${window.location.origin}/orders/${order.id}/confirmation`;
       const result = await stripe.confirmPayment({
         elements,
@@ -695,9 +709,7 @@ export default function CheckoutPage() {
 
           {step >= 2 && liveStripeCheckout ? (
             <Elements stripe={stripePromise} options={stripeOptions}>
-              {step === 2 ? (
-                <PaymentStepForm onReadyForReview={() => setStep(3)} />
-              ) : null}
+              <PaymentStepForm active={step === 2} onReadyForReview={() => setStep(3)} />
               {step === 3 && order && payment?.clientSecret ? (
                 <ReviewAndPay
                   order={order}
