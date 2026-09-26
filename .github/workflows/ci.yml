@@ -93,4 +93,26 @@ jobs:
             echo "Create a site at https://app.netlify.com/teams/yugshah82/projects then add those secrets."
             exit 0
           fi
-          npx netlify-cli deploy --prod --no-build --dir=client/dist --functions=netlify/functions --filter client --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN" --message "github ${GITHUB_SHA}"
+          if [ ! -d "$GITHUB_WORKSPACE/netlify/functions" ]; then
+            echo "API functions directory is missing."
+            exit 1
+          fi
+          npx netlify-cli deploy --prod --no-build \
+            --dir="$GITHUB_WORKSPACE/client/dist" \
+            --functions="$GITHUB_WORKSPACE/netlify/functions" \
+            --filter client \
+            --site "$NETLIFY_SITE_ID" \
+            --auth "$NETLIFY_AUTH_TOKEN" \
+            --message "github ${GITHUB_SHA}"
+          code=""
+          for _ in 1 2 3 4 5 6; do
+            code="$(curl -s -o /tmp/api-csrf.json -w "%{http_code}" https://ecommerce-cicd-yug0708.netlify.app/api/auth/csrf)"
+            if [ "$code" = "200" ]; then
+              break
+            fi
+            sleep 5
+          done
+          if [ "$code" != "200" ]; then
+            echo "Live API check failed with status $code"
+            exit 1
+          fi
