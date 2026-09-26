@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { env, isDev } from '../config/env.js';
+import { isDev } from '../config/env.js';
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -11,9 +11,7 @@ export const prisma =
     log: isDev ? ['warn', 'error'] : ['error'],
   });
 
-if (env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
-}
+globalForPrisma.prisma = prisma;
 
 export async function disconnectPrisma(): Promise<void> {
   await prisma.$disconnect();

@@ -1,12 +1,27 @@
 [build]
-  command = "npm ci && npm run build -w client"
+  command = "npm ci && npm run db:generate && npm run build -w server && npm run build -w client"
   publish = "client/dist"
 
 [build.environment]
   NODE_VERSION = "20"
 
-# SPA fallback. API calls should use an absolute VITE_API_URL in production
-# (Netlify cannot run the Express + Postgres Docker stack).
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  # Keep the Prisma CLI and Windows engine out of the zip (250 MB function limit).
+  external_node_modules = ["@prisma/client"]
+  included_files = [
+    "node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node",
+    "node_modules/.prisma/client/schema.prisma"
+  ]
+
+# Must sit above the SPA fallback so /api hits Express.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

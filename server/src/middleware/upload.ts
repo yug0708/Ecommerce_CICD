@@ -6,12 +6,21 @@ import multer from 'multer';
 import { ValidationError } from '../utils/AppError.js';
 import { assertImageFileOnDisk, assertSafeUploadFilename } from '../utils/imageMagic.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const isLambda = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT);
+const __dirname = isLambda
+  ? '/tmp'
+  : path.dirname(fileURLToPath(import.meta.url));
 
-export const UPLOADS_ROOT = path.resolve(__dirname, '../../uploads');
+export const UPLOADS_ROOT = isLambda
+  ? path.join('/tmp', 'uploads')
+  : path.resolve(__dirname, '../../uploads');
 export const PRODUCT_UPLOADS_DIR = path.join(UPLOADS_ROOT, 'products');
 
-mkdirSync(PRODUCT_UPLOADS_DIR, { recursive: true });
+try {
+  mkdirSync(PRODUCT_UPLOADS_DIR, { recursive: true });
+} catch {
+  // Lambda's task root is read-only; /tmp is used instead.
+}
 
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 

@@ -3,8 +3,11 @@ import { fileURLToPath } from 'node:url';
 import { config as loadDotenv } from 'dotenv';
 import { z } from 'zod';
 
-const envDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-loadDotenv({ path: path.join(envDir, '.env'), override: true });
+const isLambda = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT);
+if (!isLambda) {
+  const envDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+  loadDotenv({ path: path.join(envDir, '.env'), override: true });
+}
 
 const envSchema = z
   .object({
@@ -76,6 +79,9 @@ if (!parsed.success) {
     .join('\n');
 
   console.error(`Invalid environment configuration:\n${details}`);
+  if (isLambda) {
+    throw new Error(`Invalid environment configuration:\n${details}`);
+  }
   process.exit(1);
 }
 
