@@ -1,5 +1,5 @@
 [build]
-  command = "npm ci && npm run db:generate && npm run build -w server && npm run build -w client"
+  command = "npm ci --include=dev && npm run db:generate && npm run build -w server && npm run build -w client"
   publish = "client/dist"
 
 [build.environment]

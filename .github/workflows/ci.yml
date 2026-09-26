@@ -93,4 +93,4 @@ jobs:
             echo "Create a site at https://app.netlify.com/teams/yugshah82/projects then add those secrets."
             exit 0
           fi
-          npx netlify-cli deploy --prod --dir=client/dist --functions=netlify/functions --filter client --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN" --message "github ${GITHUB_SHA}"
+          npx netlify-cli deploy --prod --no-build --dir=client/dist --functions=netlify/functions --filter client --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN" --message "github ${GITHUB_SHA}"
